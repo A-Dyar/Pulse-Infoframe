@@ -1,0 +1,75 @@
+﻿@{
+    ViewData["Title"] = "Index";
+}
+<div class="col-sm-3">&nbsp;</div>
+<div class="panel col-sm-6 col-xs-12" style="background-color:#B0E0E6;">
+    <div class="panel-title text-center" style="padding-top:20px;">
+        <h3 style="font-weight:bolder">Cart Contents</h3>
+        <img src="/images/tray.png" style="height:250px;width:400px;padding-bottom:5%;" />
+    </div>
+    <div class="text-center" style="padding-top:10px;">
+        @{
+            Dictionary<string, object> items = Context.Session.Get<Dictionary<string, Object>>(SessionVars.Cart);
+            decimal costprice = 0;
+            decimal msrp = 0;
+            decimal extended = 0;
+            decimal subtotal = 0;
+            decimal tax = 0;
+            decimal ordertotal = 0;
+        }
+        <table class="table table-striped">
+            <tr style="font-weight:bolder;">
+                <th class="col-xs-2 text-center">Qty</th>
+                <th class="col-xs-10 text-center">Description</th>
+                <td class="col-xs-4 text-center">MSRP</td>
+                <td class="col-xs-4 text-center">Cost Per</td>
+                <td class="col-xs-4 text-center">Extended</td>
+            </tr>
+            @{
+                if (items != null)
+                {
+                    foreach (var key in items.Keys)
+                    {
+                        ProductViewModel item = JsonConvert.DeserializeObject<ProductViewModel>
+                        (Convert.ToString(items[key]));
+                        if (item.Qty > 0)
+                        {
+                            costprice += item.CostPrice * item.Qty;
+                            msrp += item.MSRP * item.Qty;
+                            extended += costprice + msrp;
+                            subtotal += extended;
+                            tax = subtotal * Convert.ToDecimal(.13);
+                            ordertotal = subtotal + tax;
+                            <tr>
+                                <td class="col-xs-2 text-center">@item.Qty</td>
+                                <td class="col-xs-10 text-left"><strong>@item.ProductName</strong> @item.Description</td>
+                                <td class="col-xs-4 text-center">$@item.MSRP</td>
+                                <td class="col-xs-4 text-center">$@item.CostPrice</td>
+                                <td class="col-xs-4 text-center">$@extended</td>
+                            </tr>
+                        }
+                    }
+                }
+            }
+        </table>
+        <hr />
+        <table class="table table-striped">
+            <tr><th colspan="4" class="col-xs-4 text-left" style="font-size:large;font-weight:bold;">Cart Totals</th></tr>
+            <tr>
+                <td class="col-xs-2 text-right">Subtotal: $@Math.Round(subtotal, 2)</td>
+                <td class="col-xs-2 text-right">Tax: $@Math.Round(tax, 2)</td>
+                <td class="col-xs-2 text-right">Order Total: $@Math.Round(ordertotal, 2)</td>
+            </tr>
+        </table>
+        <hr />
+        <div class="text-center">
+            <form asp-controller="Cart" asp-action="AddCart" method="post" role="form">
+                @if (Context.Session.GetString(SessionVars.User) != null)
+                {
+                    <button type="submit" class="btn btn-sm btn-primary" id="modalbtn">Add Cart</button>
+                }
+                &nbsp;<a href="/Cart/ClearCart" class="btn btn-sm btn-success">Clear Cart</a>
+            </form>
+        </div>
+    </div>
+</div>
